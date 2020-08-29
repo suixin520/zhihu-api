@@ -4,6 +4,13 @@ const bodyParser = require('koa-body-parser');
 const routing = require('./routes');
 const error = require('koa-json-error');
 const parameter = require('koa-parameter');
+const mongoose = require('mongoose');
+const { dbs } = require('../config.js')
+mongoose.connect(dbs, { 
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}, () => console.log('MongoDB数据库连接成功！'));
+mongoose.connection.on('error', console.error)
 //mongodb+srv://suixin:<password>@zhihu.q9lcl.mongodb.net/<dbname>?retryWrites=true&w=majority
 // const MongoClient = require('mongodb').MongoClient;
 // const uri = "mongodb+srv://suixin:<password>@zhihu.q9lcl.mongodb.net/<dbname>?retryWrites=true&w=majority";

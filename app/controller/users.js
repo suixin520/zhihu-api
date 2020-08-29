@@ -1,36 +1,38 @@
-let db = [
-  {
-    name: '宋博'
-  }
-];
+const User = require('../models/user');
 
-class User {
-  getAllUser(ctx) {
-    ctx.body = db;
+class UserController {
+  // 查所有
+  async getAllUser(ctx) {
+    const user = await User.find();
+    ctx.body = user;
   }
-  createUser(ctx) {
+  // 查特定
+  async getUserById(ctx) {
+    const user = await User.findById(ctx.params.id);
+    user ? ctx.body = user : ctx.throw(404, '用户不存在');
+  }
+  // 增加用户
+  async createUser(ctx) {
     ctx.verifyParams({
-      name: { type: 'string', required: true },
-      age: { type: 'number', required: false }
+      name: { type: 'string', required: true }
     })
-    db.push(ctx.request.body);
-    ctx.body = ctx.request.body;
+    const user = await new User(ctx.request.body).save();
+    ctx.body = user;
   }
-  updateUser(ctx) {
-    if (ctx.params.id * 1 >= db.length) {
-      ctx.throw(412, '修改的数据不在数据库范围内');
-    }
+  // 修改用户
+  async updateUser(ctx) {
     ctx.verifyParams({
-      name: { type: 'string', required: true },
-      age: { type: 'number', required: false }
+      name: { type: 'string', required: true }
     })
-    db[ctx.params.id * 1] = ctx.request.body;
-    ctx.body = ctx.request.body;
+    const user = await User.findByIdAndUpdate(ctx.params.id, ctx.request.body)
+    user ? ctx.body = user : ctx.throw(404, '用户不存在');
   }
-  deleteUser(ctx) {
-    db.splice(ctx.params.id * 1, 1);
+  // 删除用户
+  async deleteUser(ctx) {
+    const user = await User.findByIdAndRemove(ctx.params.id);
+    user ? ctx.body = user : ctx.throw(404, '用户不存在');
     ctx.status = 204;
   }
 }
 
-module.exports = new User
+module.exports = new UserController
