@@ -10,7 +10,9 @@ class UserController {
   }
   // 查特定
   async getUserById(ctx) {
-    const user = await User.findById(ctx.params.id);
+    const { fields } = ctx.query;
+    const fieldsSelect = fields.split(';').filter(p => p).map(p => ' +' + p).join('');
+    const user = await User.findById(ctx.params.id).select(fieldsSelect);
     user ? ctx.body = user : ctx.throw(404, '用户不存在');
   }
   // 增加用户
@@ -35,7 +37,14 @@ class UserController {
   async updateUser(ctx) {
     ctx.verifyParams({
       name: { type: 'string', required: false },
-      password: { type: 'string', required: false }
+      password: { type: 'string', required: false },
+      avatar_url: { type: 'string', required: false },
+      gender: { type: 'string', required: false },
+      headline: { type: 'string', required: false },
+      locations: { type: 'array', itemType: 'string', required: false },
+      business: { type: 'string', required: false },
+      employments: { type: 'array', itemType:'object', required: false },
+      educations: { type: 'array', itemType:'object', required: false },
     })
     const user = await User.findByIdAndUpdate(ctx.params.id, ctx.request.body)
     user ? ctx.body = user : ctx.throw(404, '用户不存在');
