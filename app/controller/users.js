@@ -43,8 +43,8 @@ class UserController {
       headline: { type: 'string', required: false },
       locations: { type: 'array', itemType: 'string', required: false },
       business: { type: 'string', required: false },
-      employments: { type: 'array', itemType:'object', required: false },
-      educations: { type: 'array', itemType:'object', required: false },
+      employments: { type: 'array', itemType: 'object', required: false },
+      educations: { type: 'array', itemType: 'object', required: false },
     })
     const user = await User.findByIdAndUpdate(ctx.params.id, ctx.request.body)
     user ? ctx.body = user : ctx.throw(404, '用户不存在');
@@ -66,6 +66,44 @@ class UserController {
     const { _id, name } = user;
     const token = JWT.sign({ _id, name }, secret, { expiresIn: '1d' });
     ctx.body = { token }
+  }
+  // 获取关注者列表
+  async listFollowing(ctx) {
+    const user = await User.findById(ctx.params.id).select('+following').populate('following');
+    if (!user) { ctx.throw(404); }
+    ctx.body = user.following;
+  }
+  // 获取关注我（粉丝）列表
+  async listFollowers(ctx) {
+    const users = await User.find({ following: ctx.params.id });
+    ctx.body = users;
+  }
+  // 验证用户是否存在的中间件
+  async checkUserExist(ctx, next) {
+    const user = await User.findById(ctx.params.id);
+    if (!user) {
+      ctx.throw(404, '用户不存在');
+    }
+    await next();
+  }
+  // 关注别人的接口
+  async follow(ctx) {
+    const me = await User.findById(ctx.state.user._id).select('+following');
+    if (!me.following.map(id => id.toString()).includes(ctx.params.id)) {
+      me.following.push(ctx.params.id);
+      me.save();
+    }
+    ctx.body = 204;
+  }
+  // 取消关注
+  async unfollow(ctx) {
+    const me = await User.findById(ctx.state.user._id).select('+following');
+    const index = me.following.map(id => id.toString()).indexOf(ctx.params.id);
+    if (index > -1) {
+      me.following.splice(index, 1);
+      me.save();
+    }
+    ctx.status = 204;
   }
 }
 

@@ -25,7 +25,11 @@ const userSchema = new Schema({
       entrance_year: { type: Number }, // 入学年份
       graduation_year: { type: Number } // 毕业年份
     }], select: false
-  } // 教育经历
+  }, // 教育经历
+  following: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    select: false
+  } // 关注着
 })
 
 module.exports = model('User', userSchema);
