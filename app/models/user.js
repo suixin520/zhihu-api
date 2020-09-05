@@ -34,7 +34,19 @@ const userSchema = new Schema({
   followingTopics: {
     type: [{ type: Schema.Types.ObjectId, ref: 'Topic' }],
     select: false
-  }
+  }, // 关注的话题
+  likingAnswers: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Answer' }],
+    select: false,
+  }, // 赞答案
+  dislikingAnswers: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Answer' }],
+    select: false,
+  }, // 踩答案
+  collectingAnswers: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Answer' }],
+    select: false,
+  }, // 收藏答案
 })
 
 module.exports = model('User', userSchema);
