@@ -47,6 +47,6 @@ const userSchema = new Schema({
     type: [{ type: Schema.Types.ObjectId, ref: 'Answer' }],
     select: false,
   }, // 收藏答案
-})
+}, { timestamps: true })
 
 module.exports = model('User', userSchema);
