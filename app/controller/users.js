@@ -1,5 +1,6 @@
 const JWT = require('jsonwebtoken');
 const User = require('../models/user');
+const Question = require('../models/question');
 const { secret } = require('../../config');
 
 class UserController {
@@ -141,6 +142,11 @@ class UserController {
       me.save();
     }
     ctx.status = 204;
+  }
+  // 列出当前用户的问题列表
+  async listQuestions(ctx) {
+    const questions = await Question.find({ questioner: ctx.params.id });
+    ctx.body = questions;
   }
 }
 
