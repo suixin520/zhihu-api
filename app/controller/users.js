@@ -5,14 +5,26 @@ const { secret } = require('../../config');
 class UserController {
   // 查所有
   async getAllUser(ctx) {
-    const user = await User.find();
+    const { per_page = 10 } = ctx.query;
+    const page = Math.max(ctx.query.page * 1, 1) - 1;
+    const perPage = Math.max(per_page * 1, 1);
+    const user = await User.find({ name: new RegExp(ctx.query.q) }).limit(perPage).skip(page * perPage);
     ctx.body = user;
   }
   // 查特定
   async getUserById(ctx) {
-    const { fields } = ctx.query;
+    const { fields = '' } = ctx.query;
     const fieldsSelect = fields.split(';').filter(p => p).map(p => ' +' + p).join('');
-    const user = await User.findById(ctx.params.id).select(fieldsSelect);
+    const populateStr = fields.split(';').filter(p => p).map(f => {
+      if (f === 'employments') {
+        return 'employments.company employments.job';
+      }
+      if (f === 'educations') {
+        return 'educations.school educations.major';
+      }
+      return f;
+    })
+    const user = await User.findById(ctx.params.id).select(fieldsSelect).populate(populateStr);
     user ? ctx.body = user : ctx.throw(404, '用户不存在');
   }
   // 增加用户
@@ -70,7 +82,7 @@ class UserController {
   // 获取关注者列表
   async listFollowing(ctx) {
     const user = await User.findById(ctx.params.id).select('+following').populate('following');
-    if (!user) { ctx.throw(404); }
+    if (!user) { ctx.throw(404, '用户不存在'); }
     ctx.body = user.following;
   }
   // 获取关注我（粉丝）列表
@@ -101,6 +113,31 @@ class UserController {
     const index = me.following.map(id => id.toString()).indexOf(ctx.params.id);
     if (index > -1) {
       me.following.splice(index, 1);
+      me.save();
+    }
+    ctx.status = 204;
+  }
+  // 获取关注话题列表
+  async listFollowingTopic(ctx) {
+    const user = await User.findById(ctx.params.id).select('+followingTopics').populate('followingTopics');
+    if (!user) { ctx.throw(404, '用户不存在'); }
+    ctx.body = user.followingTopics;
+  }
+  // 关注话题
+  async followTopic(ctx) {
+    const me = await User.findById(ctx.state.user._id).select('+followingTopics');
+    if (!me.followingTopics.map(id => id.toString()).includes(ctx.params.id)) {
+      me.followingTopics.push(ctx.params.id);
+      me.save();
+    }
+    ctx.body = 204;
+  }
+  // 取消关注话题
+  async unfollowTopic(ctx) {
+    const me = await User.findById(ctx.state.user._id).select('+followingTopics');
+    const index = me.followingTopics.map(id => id.toString()).indexOf(ctx.params.id);
+    if (index > -1) {
+      me.followingTopics.splice(index, 1);
       me.save();
     }
     ctx.status = 204;
